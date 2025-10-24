@@ -1280,6 +1280,27 @@ def main():
         altura_por_accion = 20
         altura_grafico = max(altura_minima, len(df_ranking) * altura_por_accion)
         
+        # Preparar datos adicionales para el hover
+        # Formatear Market Cap en formato legible
+        def format_market_cap(mc):
+            if mc >= 1:
+                return f"{mc:.1f}B€"
+            else:
+                return f"{mc*1000:.0f}M€"
+        
+        customdata = np.column_stack([
+            df_ranking['Total_Return_%'].values,
+            df_ranking['Score'].values,
+            df_ranking['PE_Ratio'].values,
+            [format_market_cap(x) for x in df_ranking['Market_Cap'].values],
+            df_ranking['ROE'].values,
+            df_ranking['Volatilidad'].values,
+            df_ranking['Beta'].values,
+            df_ranking['Sector'].values,
+            df_ranking['Num_Analysts'].values,
+            df_ranking['Recommendation'].values
+        ])
+        
         fig = go.Figure()
         fig.add_trace(go.Bar(
             name='Potencial Revalorización',
@@ -1289,7 +1310,28 @@ def main():
             text=df_ranking['Upside_%'].apply(lambda x: f"{x:.1f}%"),
             textposition='inside',
             textfont=dict(size=9),
-            hovertemplate='%{x}<br>Upside: %{y:.1f}%<extra></extra>'
+            customdata=customdata,
+            hovertemplate='<b>%{x}</b><br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>📊 RENTABILITAT</b><br>' +
+                         '  Upside: <b>%{y:.1f}%</b><br>' +
+                         '  Total Return: <b>%{customdata[0]:.1f}%</b><br>' +
+                         '  Score: <b>%{customdata[1]:.0f}/100</b><br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>💼 FONAMENTALS</b><br>' +
+                         '  PE Ratio: %{customdata[2]:.1f}<br>' +
+                         '  ROE: %{customdata[4]:.1f}%<br>' +
+                         '  Market Cap: %{customdata[3]}<br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>⚡ RISC</b><br>' +
+                         '  Volatilitat: %{customdata[5]:.1f}%<br>' +
+                         '  Beta: %{customdata[6]:.2f}<br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>🏷️ ALTRES</b><br>' +
+                         '  Sector: %{customdata[7]}<br>' +
+                         '  Analistes: %{customdata[8]:.0f}<br>' +
+                         '  Recomanació: %{customdata[9]}<br>' +
+                         '<extra></extra>'
         ))
         fig.add_trace(go.Bar(
             name='Dividend Yield',
@@ -1299,7 +1341,28 @@ def main():
             text=df_ranking['Dividend_Yield'].apply(lambda x: f"{x:.1f}%" if x > 0.5 else ""),
             textposition='inside',
             textfont=dict(size=9),
-            hovertemplate='%{x}<br>Dividendo: %{y:.1f}%<extra></extra>'
+            customdata=customdata,
+            hovertemplate='<b>%{x}</b><br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>📊 RENTABILITAT</b><br>' +
+                         '  Dividend: <b>%{y:.1f}%</b><br>' +
+                         '  Total Return: <b>%{customdata[0]:.1f}%</b><br>' +
+                         '  Score: <b>%{customdata[1]:.0f}/100</b><br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>💼 FONAMENTALS</b><br>' +
+                         '  PE Ratio: %{customdata[2]:.1f}<br>' +
+                         '  ROE: %{customdata[4]:.1f}%<br>' +
+                         '  Market Cap: %{customdata[3]}<br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>⚡ RISC</b><br>' +
+                         '  Volatilitat: %{customdata[5]:.1f}%<br>' +
+                         '  Beta: %{customdata[6]:.2f}<br>' +
+                         '━━━━━━━━━━━━━━━━━━━━<br>' +
+                         '<b>🏷️ ALTRES</b><br>' +
+                         '  Sector: %{customdata[7]}<br>' +
+                         '  Analistes: %{customdata[8]:.0f}<br>' +
+                         '  Recomanació: %{customdata[9]}<br>' +
+                         '<extra></extra>'
         ))
         fig.update_layout(
             barmode='stack',
@@ -1307,7 +1370,7 @@ def main():
             title=f"Rentabilidad Total Esperada (12 meses) - {mercado_seleccionado} ({len(df_ranking)} empresas)",
             xaxis_title="Empresa",
             yaxis_title="Rentabilidad Esperada (%)",
-            hovermode='x unified',
+            hovermode='closest',
             template='plotly_white',
             showlegend=True,
             xaxis={'tickangle': -45, 'tickfont': {'size': 10}},
